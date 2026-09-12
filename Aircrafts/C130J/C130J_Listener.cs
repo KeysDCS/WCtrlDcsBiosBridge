@@ -114,7 +114,7 @@ internal sealed class C130J_Listener : AircraftListener
     // The gear lights and the master caution are declared in LedDefaults, which registers them.
     protected override void RegisterFrontpanelControls() { }
 
-    // Runs on the UDP receiver thread, like the F-14B(U) and A-10C live export paths.
+    // Runs on the UDP receiver thread, like the A-10C live export path.
     private void OnLiveExportData(SimExportData data)
     {
         // The export only sends a page when it changed, plus a heartbeat. A packet without

@@ -12,7 +12,6 @@ internal record SimExportData(
     [property: JsonProperty("aircraft")]    string?          Aircraft,
     [property: JsonProperty("environment")] EnvironmentData? Environment,
     [property: JsonProperty("position")]    PositionData?    Position,
-    [property: JsonProperty("cdnu")]        List<string>?    Cdnu,
     [property: JsonProperty("cni")]         CniData?         Cni);
 
 internal record EnvironmentData(

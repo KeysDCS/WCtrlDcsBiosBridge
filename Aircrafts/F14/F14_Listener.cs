@@ -16,7 +16,15 @@ internal partial class F14_Listener : AircraftListener
     private string _timerTm = "00";
     private string _timerTs = "00";
 
-    public F14_Listener(UserOptions options) : base(AircraftRegistry.F14B, options)
+    public F14_Listener(UserOptions options) : this(AircraftRegistry.F14B, options) { }
+
+    /// <summary>
+    /// Variant constructor: the F-14B(U) is the same aircraft plus a CDNU and takes every
+    /// F-14 control from here, while registering under its own descriptor and font. See
+    /// <see cref="F14BU_Listener"/>.
+    /// </summary>
+    protected F14_Listener(AircraftDescriptor descriptor, UserOptions options)
+        : base(descriptor, options)
     {
         _rioDisplayKey = Enum.TryParse<Key>(options.F14.RioKey, out var rioKey)
             ? rioKey : Key.PrevPage;
@@ -28,7 +36,7 @@ internal partial class F14_Listener : AircraftListener
 
     ~F14_Listener() => Dispose(false);
 
-    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    protected virtual void HandleKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == _rioDisplayKey)
         {

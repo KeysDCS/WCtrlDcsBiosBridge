@@ -58,9 +58,6 @@ built-in defaults are unaffected by that setting, as they always have been.
 
 The PDC-3 has no LEDs of its own and is not listed.
 
-The C-130J and the F-14B(U) cannot be configured: DCS-BIOS carries no module for either, so
-there are no controls to bind. Everything those two show comes from the live data export.
-
 ## The file
 
 Bindings live in `ledmappings.json`, next to the executable, apart from `useroptions.json` so

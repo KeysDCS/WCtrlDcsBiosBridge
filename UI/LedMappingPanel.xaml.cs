@@ -161,12 +161,11 @@ public sealed partial class LedMappingPanel : UserControl
     }
 
     /// <summary>
-    /// The aircraft that can be configured: those DCS-BIOS actually exports controls for.
-    /// The F-14B(U) borrows another module's id purely so the control locator has something
-    /// to load — binding its neighbour's controls would light nothing.
+    /// The aircraft that can be configured. Every registered one now: the F-14B(U) was the
+    /// exception while DCS-BIOS exported nothing for it, and since v0.11.7 its F-14 module
+    /// covers that variant too, so binding its controls lights what it says.
     /// </summary>
-    private static IReadOnlyList<AircraftDescriptor> Configurable { get; } =
-        AircraftRegistry.All.Where(d => d.DcsBiosModuleId is null).ToList();
+    private static IReadOnlyList<AircraftDescriptor> Configurable { get; } = AircraftRegistry.All;
 
     private readonly ObservableCollection<LedRowViewModel> _rows = new();
 

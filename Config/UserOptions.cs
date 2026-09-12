@@ -20,10 +20,10 @@ public class UserOptions
 
     /// <summary>
     /// When true, the bridge listens for the JSON export sent by wctrl-export.lua (UDP 31090):
-    /// live wind/position for the A-10C performance pages, the CDNU rows for the F-14B(U), and
-    /// the CNI-MU pages for the C-130J — neither of which DCS-BIOS carries. Requires
-    /// wctrl-export.lua chained from DCS Scripts/Export.lua, from the same release as this app:
-    /// the protocol version must match exactly or nothing is displayed.
+    /// live wind/position for the A-10C performance pages, and the CNI-MU pages for the C-130J,
+    /// which DCS-BIOS does not carry. Requires wctrl-export.lua chained from DCS
+    /// Scripts/Export.lua, from the same release as this app: the protocol version must match
+    /// exactly or nothing is displayed.
     /// </summary>
     public bool EnableLiveExport { get; set; }
 
@@ -107,7 +107,7 @@ public class F16COptions
     public string RwrKey { get; set; } = "LineSelectRight1";
 }
 
-/// <summary>F-14B RIO CAP / radio page options.</summary>
+/// <summary>F-14B RIO CAP / radio / CDNU page options.</summary>
 public class F14Options
 {
     /// <summary>MCDU key that shows the RIO CAP display.</summary>
@@ -115,4 +115,7 @@ public class F14Options
 
     /// <summary>MCDU key that shows the radio display.</summary>
     public string RadioKey { get; set; } = "NextPage";
+
+    /// <summary>MCDU key that shows the CDNU display. F-14B(U) only.</summary>
+    public string CdnuKey { get; set; } = "Data";
 }

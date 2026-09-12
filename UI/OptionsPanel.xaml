@@ -144,11 +144,11 @@
 
         <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 
-        <!-- F-14B -->
+        <!-- F-14B / F-14B(U) -->
         <ContentControl x:Name="F14Section" HorizontalContentAlignment="Stretch" IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock Text="F-14B" FontWeight="SemiBold" FontSize="13"
+                    <TextBlock Text="F-14B / F-14B(U)" FontWeight="SemiBold" FontSize="13"
                                Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
                     <Border x:Name="F14Badge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
                             VerticalAlignment="Center" Visibility="Collapsed"
@@ -169,6 +169,12 @@
                     <TextBlock x:Name="ShowRadioKeyLabel" x:Uid="ShowRadioKeyLabel" Text="Show Radio Key:" VerticalAlignment="Center" Width="120"/>
                     <ComboBox x:Name="F14RadioKeyCombo"
                               SelectedValue="{Binding F14.RadioKey, Mode=TwoWay}"
+                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock x:Name="ShowCdnuKeyLabel" x:Uid="ShowCdnuKeyLabel" Text="Show CDNU Key:" VerticalAlignment="Center" Width="120"/>
+                    <ComboBox x:Name="F14CdnuKeyCombo"
+                              SelectedValue="{Binding F14.CdnuKey, Mode=TwoWay}"
                               SelectionChanged="ComboBox_Changed" Width="150"/>
                 </StackPanel>
             </StackPanel>

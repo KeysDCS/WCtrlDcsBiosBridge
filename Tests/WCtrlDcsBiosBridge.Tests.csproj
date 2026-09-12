@@ -34,6 +34,9 @@
          each other rather than only against themselves. -->
     <None Include="..\Scripts\wctrl-export\wctrl-export.lua" CopyToOutputDirectory="PreserveNewest"
           LinkBase="Scripts" />
+    <!-- The device's glyph slot table: what a font is allowed to address. -->
+    <None Include="..\libs\WwDevicesDotnet\Resources\WinctrlFontPacketMap-3x*.json" CopyToOutputDirectory="PreserveNewest"
+          LinkBase="Resources" />
   </ItemGroup>
 
 </Project>
