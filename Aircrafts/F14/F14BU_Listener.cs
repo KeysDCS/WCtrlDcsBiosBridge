@@ -50,9 +50,12 @@ internal sealed class F14BU_Listener : F14_Listener
     /// and the underscore slot draws a cross. The diamond had no equivalent at all, so it is
     /// drawn into the device's spare U+25A1 slot by the font generator.
     ///
-    /// The horizontal double-headed arrow has no slot at all, in any spelling, so it is blanked
-    /// rather than passed through: guessing at a bitmap reads worse than a gap. Give the font
-    /// generator a U+2194 and it can be mapped like the others.
+    /// The five arrows are drawn by tools/f14bu-font/build-arrows.py rather than inherited from
+    /// the A-10C, whose heads are wide enough that a left arrow and a right one are hard to tell
+    /// apart at this size. The horizontal double-headed one cannot be filed under U+2194 at all:
+    /// a glyph only reaches the panel when the device's packet map lists its character, and none
+    /// of the 110 slots it exposes is U+2194. So it sits in the spare U+25C0 slot, a
+    /// left-pointing triangle in name only.
     /// </summary>
     private static readonly Dictionary<char, char> CdnuGlyphs = new()
     {
@@ -61,7 +64,7 @@ internal sealed class F14BU_Listener : F14_Listener
         ['{'] = '\u2191',        // up arrow, flanking the entry it scrolls to
         ['}'] = '\u2193',        // down arrow, flanking the entry it scrolls to
         ['\u00AE'] = '\u0394',   // ® scratchpad: double-headed vertical arrow
-        ['\u00A9'] = ' ',        // © scratchpad: double-headed horizontal arrow, no glyph for it
+        ['\u00A9'] = '\u25C0',   // © scratchpad: double-headed horizontal arrow
         ['\u0013'] = '\u25A1',   // scratchpad: diamond with a centre pip
         ['_'] = '\u2B21',        // scratchpad cursor: the underscore slot draws a cross
     };
@@ -161,7 +164,7 @@ internal sealed class F14BU_Listener : F14_Listener
     /// Case is preserved: the CDNU labels it mixed ("Bagram Departure", "Flt Pln"), and
     /// f14bu-font-21x31.json carries the lowercase bitmaps the shared A-10C font lacks.
     /// </summary>
-    private static string MapGlyphs(string? raw)
+    internal static string MapGlyphs(string? raw)
     {
         if (string.IsNullOrEmpty(raw)) return string.Empty;
 

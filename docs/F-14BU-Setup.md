@@ -36,6 +36,13 @@ is powered in the cockpit.
 ## Symbols
 
 The CDNU draws its arrows and markers on control codes, which DCS-BIOS swaps for printable
-stand-ins (`«` `»` `{` `}` `®` `©`) before exporting the row. The bridge turns those into the CDU
-font's own glyphs. One has no glyph on the device at all — the scratchpad's horizontal
-double-headed arrow — and renders blank until the font gains a slot for it.
+stand-ins (`«` `»` `{` `}` `®` `©`) before exporting the row. The bridge turns each one back into
+a glyph the CDU font carries.
+
+All five arrows are drawn by `tools/f14bu-font/build-arrows.py`, which reads their placement
+out of the font and gives them one head shape, rather than inheriting the A-10C's — whose heads
+are wide enough that a left arrow and a right one are hard to tell apart at this size.
+
+The panel is not free about where a bitmap goes: it reaches the device only under one of the 110
+characters its glyph table names, and the horizontal double-headed arrow's own U+2194 is not among
+them. That one lives in a spare slot instead.
