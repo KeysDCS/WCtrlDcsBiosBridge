@@ -58,11 +58,6 @@ built-in defaults are unaffected by that setting, as they always have been.
 
 The PDC-3 has no LEDs of its own and is not listed.
 
-Every aircraft in the list can be configured. The C-130J and the F-14B(U) could not while
-DCS-BIOS carried no controls for them; it now carries both, and each binds against the module
-it is filed under — the F-14B(U) against the F-14's. Only the C-130J's display still comes
-from the live data export.
-
 ## The file
 
 Bindings live in `ledmappings.json`, next to the executable, apart from `useroptions.json` so
