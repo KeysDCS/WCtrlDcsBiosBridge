@@ -11,8 +11,8 @@ sends it over UDP to the app. Three aircraft use that feed — see
 
 | Aircraft | What the script provides | Without it |
 | --- | --- | --- |
-| F-14B(U) | The whole CDNU — DCS-BIOS carries no module for this variant | The page stays empty |
-| C-130J | The whole CNI-MU — same reason | The page stays empty |
+| F-14B(U) | The whole CDNU — DCS-BIOS carries the aircraft but not that display | The CDNU page stays empty; everything else on the aircraft still works |
+| C-130J | The whole CNI-MU — same reason | The CNI-MU page stays empty; the panel lamps still work |
 | A-10C | Live wind and field elevation, pre-filled on the TAKEOFF performance page | The pages work; you type wind and elevation in by hand |
 
 The A-10C only needs it as a convenience, and only if you use the performance pages

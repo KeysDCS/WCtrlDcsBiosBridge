@@ -266,9 +266,13 @@ public static class LedDefaults
         },
     };
 
-    /// <summary>What <paramref name="descriptor"/>'s aircraft lights on its own.</summary>
+    /// <summary>
+    /// What <paramref name="descriptor"/>'s aircraft lights on its own. Keyed by the DCS-BIOS
+    /// module id rather than the registry one, so a variant the bridge lists separately but
+    /// DCS-BIOS files under another module (the F-14B(U)) lights what that module declares.
+    /// </summary>
     internal static AircraftLedDefaults For(AircraftDescriptor descriptor) =>
-        _byModuleId.GetValueOrDefault(descriptor.ModuleId, AircraftLedDefaults.None);
+        _byModuleId.GetValueOrDefault(descriptor.EffectiveDcsBiosModuleId, AircraftLedDefaults.None);
 
     /// <summary>What the aircraft with this registry display name lights on its own.</summary>
     internal static AircraftLedDefaults ForDisplayName(string displayName)

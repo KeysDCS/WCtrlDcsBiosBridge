@@ -58,8 +58,10 @@ built-in defaults are unaffected by that setting, as they always have been.
 
 The PDC-3 has no LEDs of its own and is not listed.
 
-The C-130J and the F-14B(U) cannot be configured: DCS-BIOS carries no module for either, so
-there are no controls to bind. Everything those two show comes from the live data export.
+Every aircraft in the list can be configured. The C-130J and the F-14B(U) could not while
+DCS-BIOS carried no controls for them; it now carries both, and each binds against the module
+it is filed under — the F-14B(U) against the F-14's. Only their displays still come from the
+live data export.
 
 ## The file
 

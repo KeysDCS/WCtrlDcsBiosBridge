@@ -23,9 +23,9 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 ## Requirements
 
 - DCS World
-- DCS-BIOS [v0.11.6](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.6) or later
-  - **F-14B:** a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest) dated after 2026-08-22 is recommended — the latest F-14B
-    changes landed after v0.11.6 was cut.
+- DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later
+  - **F-14B(U):** v0.11.7 is the release whose F-14 module covers that variant. On anything
+    older the aircraft is detected but nothing is exported for it.
 - .NET 8.0 runtime
 
 At least one of these devices.
@@ -42,10 +42,10 @@ brightness, and any front-panel output. Click an aircraft for details.
 
 [A-10C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/A-10C) | [AH-64D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/AH-64D) | [F/A-18C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/FA-18C) | [CH-47F](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F) | [OH-58D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/OH-58D) | [F-14B](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-14B) | [F-15E](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-15E) | [F-16C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-16C) | [M-2000C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/M-2000C) | [UH-1H](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/UH-1H)
 
-Two more take their display from the live data export and show one page each: the
-**F-14B(U)** CDNU ([setup](docs/F-14BU-Setup.md)), which DCS-BIOS carries no module for at
-all, and the **C-130J** CNI-MU ([setup](docs/C-130J-Setup.md)), whose module is carried but
-whose display is not.
+Two more take one page from the live data export, because DCS-BIOS carries the aircraft but
+not that display: the **F-14B(U)** CDNU ([setup](docs/F-14BU-Setup.md)) and the **C-130J**
+CNI-MU ([setup](docs/C-130J-Setup.md)). The F-14B(U) is otherwise the F-14B — same RIO,
+radio and front-panel output, with the CDNU on top.
 
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
 
@@ -62,9 +62,8 @@ this way. See [LED mapping](docs/LED-Mapping.md).
 
 ### DCS-BIOS Setup
 
-1. **Download** DCS-BIOS [v0.11.6](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.6) or later:
+1. **Download** DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later:
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
-   - **Flying the F-14B?** Take a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest) dated after 2026-08-22 instead.
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:
    ```
@@ -82,10 +81,9 @@ this way. See [LED mapping](docs/LED-Mapping.md).
 ### DCS export script (optional)
 
 An extra Lua script, shipped as the `wctrl-export-scripts-<version>.zip` asset of each
-release. It is **required** for the F-14B(U) CDNU and the C-130J CNI-MU because DCS-BIOS
-exports the base C-130J module but not its CNI-MU display, and it exports neither the
-F-14B(U) CDNU data. It is **optional** for the A-10C, where it pre-fills live wind and field
-elevation on the takeoff performance page. See
+release. It is **required** for the F-14B(U) CDNU and the C-130J CNI-MU: DCS-BIOS carries
+both aircraft, but neither of those two displays. It is **optional** for the A-10C, where it
+pre-fills live wind and field elevation on the takeoff performance page. See
 [Lua export script setup](docs/Export-Script-Setup.md).
 
 ### Application Setup

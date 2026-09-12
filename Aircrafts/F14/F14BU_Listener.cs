@@ -1,17 +1,21 @@
 using WCtrlDcsBiosBridge.Services;
+using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts.F14;
 
 /// <summary>
-/// F-14B(U) CDNU repeater.
+/// F-14B(U): an F-14B plus the CDNU.
 ///
-/// DCS-BIOS has no module for this variant, so nothing arrives on the DCS-BIOS stream
-/// while it is loaded — no gear, no clock, no RIO or radio page. Everything shown here
-/// comes from the wctrl-export.lua UDP feed, which scrapes the CDNU indication directly,
-/// and the CDNU is therefore the only page this listener offers.
+/// Every F-14 control comes from the base listener. DCS-BIOS' F-14 module lists "F-14BU"
+/// among its aircraft names as of v0.11.7, so the gear lights, the clock and the RIO and
+/// radio pages all arrive on the normal stream — the variant is no longer a blind spot.
+///
+/// The CDNU is the one thing that module does not carry, and it comes from the
+/// wctrl-export.lua UDP feed instead, which scrapes the CDNU indication directly.
 /// </summary>
-internal sealed class F14BU_Listener : AircraftListener
+internal sealed class F14BU_Listener : F14_Listener
 {
+    private const string CDNU_PAGE = "CDNU";
     private const int CDNU_LINE_COUNT = 8;
 
     /// <summary>
@@ -58,10 +62,17 @@ internal sealed class F14BU_Listener : AircraftListener
         ['_'] = '\u2B21',   // scratchpad cursor: the underscore slot draws a cross
     };
 
+    private readonly Key _cdnuDisplayKey;
+
     private SimExportReceiver? _exportReceiver;
 
     public F14BU_Listener(UserOptions options) : base(AircraftRegistry.F14BU, options)
     {
+        _cdnuDisplayKey = Enum.TryParse<Key>(options.F14.CdnuKey, out var cdnuKey)
+            ? cdnuKey : Key.Data;
+
+        AddNewPage(CDNU_PAGE);
+
         if (options.EnableLiveExport)
         {
             // Started before subscribing: the receiver lives as long as the process, so a
@@ -74,10 +85,27 @@ internal sealed class F14BU_Listener : AircraftListener
         }
     }
 
-    protected override void RegisterCduControls() => RenderPlaceholder();
+    protected override void HandleKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == _cdnuDisplayKey)
+        {
+            _currentPage = CDNU_PAGE;
+            return;
+        }
 
-    // Nothing to register: DCS-BIOS exports no controls for the F-14B(U).
-    protected override void RegisterFrontpanelControls() { }
+        base.HandleKeyDown(sender, e);
+    }
+
+    protected override void RegisterCduControls()
+    {
+        base.RegisterCduControls();
+
+        RenderPlaceholder();
+
+        // The CDNU is what the variant is for, so it is the page the aircraft opens on —
+        // the RIO and radio pages keep their own keys.
+        _currentPage = CDNU_PAGE;
+    }
 
     // Runs on the UDP receiver thread, like the A-10C live export path.
     private void OnLiveExportData(SimExportData data)
@@ -85,12 +113,13 @@ internal sealed class F14BU_Listener : AircraftListener
         if (data.Cdnu == null || data.Cdnu.Count == 0)
             return;
 
-        var c = GetCompositor(DEFAULT_PAGE);
+        var c = GetCompositor(CDNU_PAGE);
         c.Clear();
 
         // Off by default, the compositor renders lowercase as small uppercase. The CDNU
         // font carries real lowercase, so ask for it — a fresh compositor each tick means
-        // this has to be set every time.
+        // this has to be set every time. The RIO and radio pages compose through their own
+        // compositors and keep the small uppercase their labels are written for.
         c.UseLowercaseFont();
 
         for (int row = 0; row < CDNU_LINE_COUNT && row < data.Cdnu.Count; row++)
@@ -126,7 +155,7 @@ internal sealed class F14BU_Listener : AircraftListener
 
     private void RenderPlaceholder()
     {
-        var c = GetCompositor(DEFAULT_PAGE);
+        var c = GetCompositor(CDNU_PAGE);
         c.Clear();
 
         // Write() establishes column 0 before Centered so it knows the line width.

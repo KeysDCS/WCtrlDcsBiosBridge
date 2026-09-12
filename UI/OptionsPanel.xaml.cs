@@ -13,7 +13,11 @@ public partial class OptionsPanel : UserControl
     /// <summary>All MCDU key names, used to populate the key dropdowns.</summary>
     public static IReadOnlyList<string> McduKeyNames { get; } = Enum.GetNames(typeof(Key));
 
-    private readonly Dictionary<string, (ContentControl Section, Border Badge)> _aircraftSections;
+    /// <summary>
+    /// The per-aircraft option sections, each listing the aircraft it covers: the F-14B and
+    /// the F-14B(U) share one, since the F-14B(U)'s pages are the F-14B's plus the CDNU.
+    /// </summary>
+    private readonly (string[] Aircraft, ContentControl Section, Border Badge)[] _aircraftSections;
 
     public OptionsPanel()
     {
@@ -23,19 +27,19 @@ public partial class OptionsPanel : UserControl
                  {
                      A10CPerfPageKeyCombo, A10CNextPageKeyCombo, A10CPrevPageKeyCombo,
                      FA18CShowIfeiKeyCombo, FA18CShowUfcKeyCombo,
-                     F14RioKeyCombo, F14RadioKeyCombo,
+                     F14RioKeyCombo, F14RadioKeyCombo, F14CdnuKeyCombo,
                      F16CDedKeyCombo, F16CNavKeyCombo, F16CRwrKeyCombo
                  })
         {
             combo.ItemsSource = McduKeyNames;
         }
 
-        _aircraftSections = new Dictionary<string, (ContentControl, Border)>(StringComparer.Ordinal)
+        _aircraftSections = new[]
         {
-            ["A-10C"] = (A10CSection, A10CBadge),
-            ["F/A-18C"] = (FA18CSection, FA18CBadge),
-            ["F-14B"] = (F14Section, F14Badge),
-            ["F-16C"] = (F16CSection, F16CBadge),
+            (new[] { "A-10C" }, A10CSection, A10CBadge),
+            (new[] { "F/A-18C" }, FA18CSection, FA18CBadge),
+            (new[] { "F-14B", "F-14B(U)" }, F14Section, F14Badge),
+            (new[] { "F-16C" }, F16CSection, F16CBadge),
         };
 
         DataContextChanged += OnDataContextChanged;
@@ -54,9 +58,10 @@ public partial class OptionsPanel : UserControl
     /// <summary>Greys out (with a badge) the section for the aircraft currently running the bridge.</summary>
     public void SetDetectedAircraft(string? detectedAircraftName)
     {
-        foreach (var (name, (section, badge)) in _aircraftSections)
+        foreach (var (aircraft, section, badge) in _aircraftSections)
         {
-            bool isActive = string.Equals(name, detectedAircraftName, StringComparison.Ordinal);
+            bool isActive = detectedAircraftName != null
+                && aircraft.Contains(detectedAircraftName, StringComparer.Ordinal);
             section.IsEnabled = !isActive;
             badge.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -123,6 +128,7 @@ public partial class OptionsPanel : UserControl
         RioCapRadioHeader.Text = Strings.Get("RioCapRadioHeader");
         ShowRioKeyLabel.Text = Strings.Get("ShowRioKeyLabel");
         ShowRadioKeyLabel.Text = Strings.Get("ShowRadioKeyLabel");
+        ShowCdnuKeyLabel.Text = Strings.Get("ShowCdnuKeyLabel");
 
         DisabledWhileInUseF16CBadge.Text = Strings.Get("DisabledWhileInUseF16CBadge");
         DedNavRwrHeader.Text = Strings.Get("DedNavRwrHeader");

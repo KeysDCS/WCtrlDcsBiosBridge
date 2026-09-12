@@ -31,8 +31,9 @@ internal sealed record AircraftDescriptor(
 {
     /// <summary>
     /// The id to look up in DCS-BIOS' own aircraft list. Normally the same as
-    /// <see cref="ModuleId"/>, but variants DCS-BIOS does not know about (the F-14B(U))
-    /// need a registry id of their own while still loading a real module's controls.
+    /// <see cref="ModuleId"/>, but a variant the bridge lists separately while DCS-BIOS
+    /// files it under another module (the F-14B(U), which DCS-BIOS carries as an F-14)
+    /// needs a registry id of its own while still loading that module's controls.
     /// </summary>
     public int EffectiveDcsBiosModuleId => DcsBiosModuleId ?? ModuleId;
 }
@@ -95,10 +96,13 @@ internal static class AircraftRegistry
         new[] { "F-14B", "F-14A-135-GR" },
         c => new F14_Listener(c.Options));
 
-    // DCS-BIOS has no F-14B(U) module: MetadataStart still reports the name, so detection
-    // works, but no F-14 control data is exported for it. Everything this listener shows
-    // comes from the wctrl-export.lua export instead. It borrows the F-14B DCS-BIOS id so the
-    // control locator still has a real module to load.
+    // The F-14B(U) is the F-14B plus a CDNU, and DCS-BIOS' F-14 module has listed "F-14BU"
+    // among its aircraft names since v0.11.7 — every F-14 control reaches this variant too,
+    // so its listener derives from the F-14B's. It still needs a registry entry of its own:
+    // its own font (the CDNU wants real lowercase), and the CDNU page on top. The id is ours,
+    // the DCS-BIOS one is the F-14's, since that is the module carrying the controls.
+    //
+    // The CDNU display is not in that module, and comes from wctrl-export.lua instead.
     public static readonly AircraftDescriptor F14BU = new(
         1016, "F-14B(U)", "F-14.json", "Resources/f14bu-font-21x31.json", false,
         new[] { "F-14BU" },

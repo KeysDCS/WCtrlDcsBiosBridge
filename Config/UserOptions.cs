@@ -107,7 +107,7 @@ public class F16COptions
     public string RwrKey { get; set; } = "LineSelectRight1";
 }
 
-/// <summary>F-14B RIO CAP / radio page options.</summary>
+/// <summary>F-14B RIO CAP / radio / CDNU page options.</summary>
 public class F14Options
 {
     /// <summary>MCDU key that shows the RIO CAP display.</summary>
@@ -115,4 +115,7 @@ public class F14Options
 
     /// <summary>MCDU key that shows the radio display.</summary>
     public string RadioKey { get; set; } = "NextPage";
+
+    /// <summary>MCDU key that shows the CDNU display. F-14B(U) only.</summary>
+    public string CdnuKey { get; set; } = "Data";
 }
