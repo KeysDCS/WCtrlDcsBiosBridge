@@ -78,7 +78,7 @@ The second is the EXEC key itself. Press it from a page that is not the modified
 on screen moves, so there would be nothing to see. The key is readable even though the lamp is
 not, so the export script counts presses across all three CNIs and the bridge takes each one as
 the change having gone through. This is why the script and the app must come from the same
-release: the count arrives on protocol version 4.
+release: the count arrives on protocol version 4 and later.
 
 Either lamp is left alone if you have bound it to something of your own in LED mapping.
 

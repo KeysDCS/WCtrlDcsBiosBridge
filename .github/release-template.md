@@ -5,13 +5,13 @@
 | Asset | What it is |
 | --- | --- |
 | `wctrl-dcsbios-bridge-{{TAG}}.zip` | The application. Extract anywhere, run `WCtrlDcsBiosBridge.exe`. |
-| `wctrl-export-scripts-{{TAG}}.zip` | The DCS export scripts (Lua). Required for the F-14B(U) CDNU and the C-130J CNI-MU; optional for the A-10C, where it pre-fills wind and elevation on the performance pages. |
+| `wctrl-export-scripts-{{TAG}}.zip` | The DCS export scripts (Lua). Required for the C-130J CNI-MU; optional for the A-10C, where it pre-fills wind and elevation on the performance pages. |
 
 ### Installing the Lua export script
 
-**Only needed for some aircraft.** Required for the **F-14B(U)** (CDNU) and the **C-130J**
-(CNI-MU), and optional for the **A-10C**, where it pre-fills wind and elevation on the
-performance pages. Every other aircraft works without it — skip this section.
+**Only needed for some aircraft.** Required for the **C-130J** (CNI-MU), and optional for the
+**A-10C**, where it pre-fills wind and elevation on the performance pages. Every other aircraft
+works without it — skip this section.
 
 Follow **[docs/Export-Script-Setup.md](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/docs/Export-Script-Setup.md)**.
 
@@ -31,8 +31,8 @@ and tick **Use DCS live data export** under **GENERAL** in the app.
 
 - Windows x64
 - [DCS-BIOS v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later —
-  see the [installation section of the README](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/README.md#installation).
-  v0.11.7 is the release whose F-14 module covers the F-14B(U).
+  see the [installation section of the README](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/README.md#installation)
+  - **F-14B(U):** the CDNU page needs a DCS-BIOS nightly dated 2026-09-11 or later
 
 ### Documentation
 

@@ -11,7 +11,7 @@ namespace WCtrlDcsBiosBridge.Services;
 /// <see cref="DataReceived"/> for each successfully parsed packet.
 ///
 /// One UDP port can only really be read by one socket at a time, but several listeners
-/// may want the same feed at once — e.g. two CDUs both mapped to the F-14B(U). So this
+/// may want the same feed at once — e.g. two CDUs both mapped to the C-130J. So this
 /// is a process-wide singleton (<see cref="Shared"/>) rather than something each listener
 /// owns: every subscriber attaches to the same socket instead of racing to bind their own.
 /// </summary>
@@ -34,7 +34,7 @@ internal sealed class SimExportReceiver : IDisposable
     /// PROTOCOL_VERSION in wctrl-export.lua: the check is an equality, so a script and an app
     /// from different releases talk past each other and show nothing.
     /// </summary>
-    public const int SupportedVersion = 4;
+    public const int SupportedVersion = 5;
 
     public event Action<SimExportData>? DataReceived;
 

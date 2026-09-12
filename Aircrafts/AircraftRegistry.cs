@@ -96,13 +96,12 @@ internal static class AircraftRegistry
         new[] { "F-14B", "F-14A-135-GR" },
         c => new F14_Listener(c.Options));
 
-    // The F-14B(U) is the F-14B plus a CDNU, and DCS-BIOS' F-14 module has listed "F-14BU"
-    // among its aircraft names since v0.11.7 — every F-14 control reaches this variant too,
-    // so its listener derives from the F-14B's. It still needs a registry entry of its own:
-    // its own font (the CDNU wants real lowercase), and the CDNU page on top. The id is ours,
-    // the DCS-BIOS one is the F-14's, since that is the module carrying the controls.
-    //
-    // The CDNU display is not in that module, and comes from wctrl-export.lua instead.
+    // The F-14B(U) is the F-14B plus a CDNU, and DCS-BIOS' F-14 module covers both: "F-14BU"
+    // among its aircraft names since v0.11.7, and the CDNU rows since 2026-09-08 (nightly
+    // builds only so far). So the listener derives from the F-14B's and everything it shows
+    // comes off the one module. It still needs a registry entry of its own: its own font (the
+    // CDNU wants real lowercase), and the CDNU page on top. The id is ours, the DCS-BIOS one
+    // is the F-14's, since that is the module carrying the controls.
     public static readonly AircraftDescriptor F14BU = new(
         1016, "F-14B(U)", "F-14.json", "Resources/f14bu-font-21x31.json", false,
         new[] { "F-14BU" },

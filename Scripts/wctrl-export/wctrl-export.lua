@@ -8,7 +8,7 @@ local socket = require("socket") --[[@as Socket]]
 local json = loadfile("Scripts\\JSON.lua")()
 local udp = nil
 
-local PROTOCOL_VERSION = 4
+local PROTOCOL_VERSION = 5
 local SEND_INTERVAL = 0.1
 
 local log_file_path = lfs.writedir() .. "Logs/wctrl-export.log"
@@ -42,98 +42,19 @@ end
 -- ---------------------------------------------------------------------------
 -- Indication parsing
 --
--- Standalone port of DCS-BIOS' Module.parse_indication, so display scraping does
--- not require DCS-BIOS to have a module registered for the aircraft. Returns a
--- table keyed both by element name and by 1-based discovery order, with [0] set
--- to the number of blocks found.
+-- Standalone parser for an indicator's indication text, so display scraping does
+-- not require DCS-BIOS to have a module registered for the aircraft.
 -- ---------------------------------------------------------------------------
 
 local INDICATION_SPLIT = "-----------------------------------------"
 local CHILDREN_START = "children are {"
 local CHILDREN_END = "}"
 
-local function parse_indication(indicator_id)
-    local ret = {}
-    local indication = list_indication(indicator_id)
-
-    if not indication or indication == "" then
-        ret[0] = 0
-        return ret
-    end
-
-    local state = {}
-    local key = nil
-    local block_lines = {}
-    local total = 0
-
-    local function current_state()
-        return #state > 0 and state[#state] or "none"
-    end
-
-    local function flush_block()
-        if not key then return end
-
-        local value = ""
-        while #block_lines > 0 do
-            if value ~= "" then value = value .. "\n" end
-            value = value .. table.remove(block_lines, 1)
-        end
-
-        ret[key] = value
-        total = total + 1
-        ret[total] = value
-        key = nil
-    end
-
-    if indication:sub(-1) ~= "\n" then
-        indication = indication .. "\n"
-    end
-
-    for line in string.gmatch(indication, "([^\n]*)\n") do
-        if line == INDICATION_SPLIT then
-            if current_state() ~= "item" then
-                table.insert(state, "item")
-            else
-                flush_block()
-            end
-        elseif line == CHILDREN_START then
-            if current_state() == "item" then
-                table.remove(state)
-            end
-            table.insert(state, "child")
-            flush_block()
-        elseif line == CHILDREN_END and #block_lines > 0 and #state > 0 then
-            if current_state() == "item" then
-                flush_block()
-                table.remove(state)
-            end
-            if current_state() == "child" then
-                table.remove(state)
-            end
-        elseif line and current_state() == "item" then
-            if key then
-                table.insert(block_lines, line)
-            else
-                key = line
-            end
-        end
-    end
-
-    if current_state() == "item" then
-        flush_block()
-        table.remove(state)
-    end
-
-    ret[0] = total
-    return ret
-end
-
---- Same source text, but the nesting is kept.
+--- Parses an indication, keeping the nesting.
 ---
---- parse_indication above flattens "children are {" into siblings, which is right for the
---- CDNU and wrong for the C-130J: its toggles draw a container element whose visible children
---- are the words, so collapsing them loses which container was emitted. Rather than change a
---- parser the F-14B(U) depends on, this is a second one.
+--- The nesting is what the C-130J needs: its toggles draw a container element whose visible
+--- children are the words, so flattening "children are {" into siblings would lose which
+--- container was emitted — and that is the only thing saying which word is highlighted.
 ---
 --- Returns a list of { n, k, v, c } in document order, n counting every node including
 --- children, plus the total.
@@ -195,126 +116,12 @@ local function parse_indication_tree(indicator_id)
 end
 
 -- ---------------------------------------------------------------------------
--- F-14B(U) CDNU
---
--- The text rows live in the ccCDNUBake indicator, which the F-14B(U) appends to
--- the shared F-14 indicator list. parse_indication numbers every block it finds,
--- so the eight text rows sit behind the container and mask elements; the mask is
--- drawn conditionally, so the rows are taken from the end of the indication
--- rather than at a fixed offset.
--- ---------------------------------------------------------------------------
-
-local CDNU_AIRCRAFT = "F-14BU"
-local CDNU_LINE_COUNT = 8
-
--- There is no starting index. It differs between installs — 27 on one, 26 on another — and
--- a default that happens to be right on the developer's machine hides the search from the
--- only person able to test it.
---
--- The indication holding the rows is named only by GUIDs, so it cannot be recognised alone.
--- Its neighbour carries "cdnu_symbology_present", which gives an anchor that moves with it.
---
--- The anchor is not enough on its own. It exists with the CDNU dark, when the rows are gone
--- and the neighbour on the other side is the TID and its 95 blocks — picking on size would
--- lock onto that. So a candidate must also *look* like the CDNU: its last row is the
--- scratchpad, bracketed, on every page seen so far.
-local CDNU_ANCHOR = "cdnu"
-local CDNU_NEIGHBOURS = { -1, 1, -2, 2, 0 }
-local SCAN_LIMIT = 60
-local RESOLVE_EVERY = 50            -- update ticks between attempts (~5 s at 10 Hz)
-
-local cdnu_indicator = nil
-local cdnu_resolved = false
-local resolve_wait = 0
-
-local function has_anchor(blocks)
-    for key in pairs(blocks) do
-        if type(key) == "string" and key:lower():find(CDNU_ANCHOR, 1, true) then
-            return true
-        end
-    end
-    return false
-end
-
---- Enough rows, and the last one is the bracketed scratchpad. Both are required: the count
---- alone matches several other displays, and the brackets alone would match nothing useful.
-local function looks_like_cdnu(blocks)
-    local count = blocks and blocks[0] or 0
-    if count < CDNU_LINE_COUNT then return false end
-
-    local last = blocks[count]
-    return type(last) == "string" and last:find("%[") ~= nil and last:sub(-1) == "]"
-end
-
---- Locates the rows by name, then confirms by shape. Returns nil rather than a guess: a
---- wrong indication that sticks is worse than none, because it looks like it works.
-local function resolve_cdnu()
-    local anchor
-    for id = 0, SCAN_LIMIT do
-        local ok, blocks = pcall(parse_indication, id)
-        if ok and blocks and has_anchor(blocks) then
-            anchor = id
-            break
-        end
-    end
-
-    if not anchor then return nil end
-
-    for _, offset in ipairs(CDNU_NEIGHBOURS) do
-        local id = anchor + offset
-        if id >= 0 then
-            local ok, blocks = pcall(parse_indication, id)
-            if ok and looks_like_cdnu(blocks) then
-                cdnu_indicator = id
-                cdnu_resolved = true
-                log(string.format("CDNU at indicator %d (%d blocks), anchored on %d",
-                    id, blocks[0], anchor))
-                return blocks
-            end
-        end
-    end
-
-    return nil
-end
-
-local function read_cdnu()
-    local blocks, block_count
-
-    if cdnu_resolved then
-        blocks = parse_indication(cdnu_indicator)
-        block_count = blocks[0] or 0
-    else
-        -- Nothing to find while the CDNU is dark, and scanning every indicator is not free,
-        -- so retry on a timer rather than on every tick.
-        if resolve_wait > 0 then
-            resolve_wait = resolve_wait - 1
-            return nil
-        end
-        resolve_wait = RESOLVE_EVERY
-
-        blocks = resolve_cdnu()
-        block_count = blocks and blocks[0] or 0
-    end
-
-    if block_count < CDNU_LINE_COUNT then
-        return nil
-    end
-
-    local lines = {}
-    for row = 1, CDNU_LINE_COUNT do
-        lines[row] = blocks[block_count - CDNU_LINE_COUNT + row] or ""
-    end
-
-    return lines
-end
-
--- ---------------------------------------------------------------------------
 -- C-130J CNI-MU
 --
--- Easier to find than the CDNU: every page names its title element "cni_title", so the anchor
--- is an exact key rather than a substring, and it sits on the indicator that actually holds
--- the page. Indicators 8, 9 and 10 are pilot, copilot and augmented crew — device_init.lua
--- registers them in that order — so scanning upwards lands on the pilot's, then the copilot's.
+-- Every page names its title element "cni_title", so the anchor is an exact key rather than a
+-- substring, and it sits on the indicator that actually holds the page. Indicators 8, 9 and 10
+-- are pilot, copilot and augmented crew — device_init.lua registers them in that order — so
+-- scanning upwards lands on the pilot's, then the copilot's.
 --
 -- Both are read every tick and each keeps its own change detection, but only one page goes out
 -- per packet: a page runs to a few kilobytes and only one crew member is usually touching
@@ -324,6 +131,14 @@ end
 -- Blocks go out as found, values and structure only. Position, font size and inversion are
 -- not in the indication at all — those come from the offline page schema on the app side.
 -- ---------------------------------------------------------------------------
+
+-- Sized for the indicator list rather than for any one display: the scan walks indicators
+-- from zero looking for the page, and stops well short of the device numbers further up.
+local SCAN_LIMIT = 60
+
+-- Nothing to find while the screen is dark, and scanning every indicator is not free, so a
+-- failed resolve retries on a timer rather than on every tick.
+local RESOLVE_EVERY = 50            -- update ticks between attempts (~5 s at 10 Hz)
 
 local CNI_AIRCRAFT   = "C-130J-30"
 local CNI_ANCHOR     = "cni_title"
@@ -428,7 +243,7 @@ end
 -- The frequency goes out with it so the app can pair a device to a page without either end
 -- hardcoding a device number: the page prints the frequency it is tuned to, and that is enough
 -- to say which radio it is talking about. An id that is right on one install and wrong on
--- another is the failure the CDNU work already ran into.
+-- another is a failure this repo has already been bitten by once.
 --
 -- Only get_frequency and is_on are ever called. SetCommand and performClickableAction sit on
 -- the same objects and throw switches.
@@ -723,20 +538,18 @@ function M.update()
             }
         end
 
-        -- Aircraft-specific: DCS-BIOS has no F-14B(U) module, so the CDNU rows
-        -- are scraped here rather than read from the DCS-BIOS stream.
-        if data.aircraft == CDNU_AIRCRAFT then
-            data.cdnu = read_cdnu()
-        elseif data.aircraft == CNI_AIRCRAFT then
+        -- Aircraft-specific: DCS-BIOS carries the C-130J but not its CNI-MU display, so the
+        -- pages are scraped here rather than read from the DCS-BIOS stream.
+        if data.aircraft == CNI_AIRCRAFT then
             data.cni = read_cni(model_time, read_radios())
         end
 
         if udp then
             local payload = json:encode(data)
 
-            -- The CDNU is eight fixed rows; a CNI page is up to sixty blocks carrying GUID
-            -- keys, so this is the first payload big enough to be worth checking. Drop the
-            -- page rather than the whole packet, so position and environment keep flowing.
+            -- A CNI page is up to sixty blocks carrying GUID keys, far and away the largest
+            -- thing in the packet. Drop the page rather than the whole packet, so position
+            -- and environment keep flowing.
             if #payload > CNI_MAX_BYTES and data.cni then
                 if not cni_oversize_logged then
                     cni_oversize_logged = true
