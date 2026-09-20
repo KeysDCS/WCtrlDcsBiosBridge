@@ -229,6 +229,9 @@
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Tecla Mostrar DED:</value></data>
   <data name="ShowNavKeyLabel" xml:space="preserve"><value>Tecla Mostrar NAV:</value></data>
   <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Tecla Mostrar RWR:</value></data>
+  <data name="DisabledWhileInUseC130JBadge" xml:space="preserve"><value>Desactivado mientras está en uso</value></data>
+  <data name="CniSeatHeader" xml:space="preserve"><value>Cambio de asiento CNI-MU (un solo CDU)</value></data>
+  <data name="SeatToggleKeyLabel" xml:space="preserve"><value>Tecla cambio de asiento:</value></data>
   <!-- LedMappingPanel -->
   <data name="LedMappingPivotItem" xml:space="preserve"><value>LEDs</value></data>
   <data name="LedMappingHeader" xml:space="preserve"><value>ASIGNACIÓN DE LEDS</value></data>

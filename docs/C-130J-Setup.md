@@ -86,19 +86,34 @@ Either lamp is left alone if you have bound it to something of your own in LED m
 
 Both CNIs are read and sent. Which one reaches a CDU depends on how many are plugged in:
 
-- **One CDU** — the pilot's CNI.
+- **One CDU** — both, one at a time. It starts on the pilot's, and **SP** turns it to the
+  copilot's and back. Both are kept up to date while you are on the other, so turning shows
+  the current page rather than the one that seat last had news on.
 - **Two or more CDUs** — each one asks which seat it is, on the same screen the CH-47F uses.
   Pick **PILOT** or **COPILOT** on the first, and the other takes the seat you did not pick.
+  A CDU keeps the seat it was given for as long as the aircraft is loaded, and SP does
+  nothing.
 
-A CDU keeps the seat it was given for as long as the aircraft is loaded.
+Another key can be used instead: pick it under **C-130J** in the options, or set
+`SeatToggleKey` in `useroptions.json` by hand. Any valid `WwDevicesDotNet.Key` name
+will do, as with the other aircraft's page keys. SP is the default because
+it is the one key a CNI page never needs — which also makes it the natural place for a DCS
+modifier that moves the CDU's own keystrokes to the other CNI, so that one press turns the
+screen and the keyboard together.
 
-**It does not follow you when you change seat**, and cannot: pressing 1 or 2 in this aircraft
-does not move you. Pilot and copilot share one camera point in the module's `Views-30.lua` —
-the two view modes differ only in shoulder size and whether the view can turn a full circle —
-and you reach the other station by leaning across, within a 6DOF box either seat already
-allows. Nothing in the cockpit changes, so nothing can be read: no cockpit parameter moves,
-and there is no camera position to compare. Each CNI is its own device with its own buttons,
-which is why the module never needs to know where you are sitting either.
+**It cannot follow you by itself**, which is why there is a key at all: pressing 1 or 2 in
+this aircraft does not move you. Pilot and copilot share one camera point in the module's
+`Views-30.lua` — the two view modes differ only in shoulder size and whether the view can turn
+a full circle — and you reach the other station by leaning across, within a 6DOF box either
+seat already allows. Nothing in the cockpit changes, so nothing can be read: no cockpit
+parameter moves, and there is no camera position to compare. Each CNI is its own device with
+its own buttons, which is why the module never needs to know where you are sitting either.
+
+The augmented crew's CNI is the third the module registers and is not carried: the export
+resolves the pilot's and the copilot's and drops anything past them, so that a dark copilot
+screen cannot put the augmented crew's page on a CDU labelled COPILOT. Adding it would be a
+change to `wctrl-export.lua` and to the seat selection screen rather than to the turning
+itself, which cycles through whatever seats it is given.
 
 ## What the highlight can and cannot follow
 

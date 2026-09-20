@@ -50,6 +50,7 @@ public class UserOptions
     public FA18COptions FA18C { get; set; } = new();
     public F16COptions F16C { get; set; } = new();
     public F14Options F14 { get; set; } = new();
+    public C130JOptions C130J { get; set; } = new();
 }
 
 // Key properties below must be a valid WwDevicesDotNet.Key enum name
@@ -118,4 +119,16 @@ public class F14Options
 
     /// <summary>MCDU key that shows the CDNU display. F-14B(U) only.</summary>
     public string CdnuKey { get; set; } = "Data";
+}
+
+/// <summary>C-130J CNI-MU options.</summary>
+public class C130JOptions
+{
+    /// <summary>
+    /// Panel key that turns a lone CDU between the pilot's CNI and the copilot's. Ignored
+    /// when a second CDU is connected, because each panel is then given a seat of its own.
+    /// SP by default: it is the one key on the PFP a CNI page never needs, which also makes
+    /// it the natural place for the DCS modifier that moves the keyboard to the other CNI.
+    /// </summary>
+    public string SeatToggleKey { get; set; } = "Space";
 }
