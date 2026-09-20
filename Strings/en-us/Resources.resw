@@ -229,6 +229,9 @@
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Show DED Key:</value></data>
   <data name="ShowNavKeyLabel" xml:space="preserve"><value>Show NAV Key:</value></data>
   <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Show RWR Key:</value></data>
+  <data name="DisabledWhileInUseC130JBadge" xml:space="preserve"><value>Disabled while in use</value></data>
+  <data name="CniSeatHeader" xml:space="preserve"><value>CNI-MU seat turning (single CDU)</value></data>
+  <data name="SeatToggleKeyLabel" xml:space="preserve"><value>Seat Turn Key:</value></data>
   <!-- LedMappingPanel -->
   <data name="LedMappingPivotItem" xml:space="preserve"><value>LEDs</value></data>
   <data name="LedMappingHeader" xml:space="preserve"><value>LED MAPPING</value></data>

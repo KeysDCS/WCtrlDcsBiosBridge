@@ -28,7 +28,8 @@ public partial class OptionsPanel : UserControl
                      A10CPerfPageKeyCombo, A10CNextPageKeyCombo, A10CPrevPageKeyCombo,
                      FA18CShowIfeiKeyCombo, FA18CShowUfcKeyCombo,
                      F14RioKeyCombo, F14RadioKeyCombo, F14CdnuKeyCombo,
-                     F16CDedKeyCombo, F16CNavKeyCombo, F16CRwrKeyCombo
+                     F16CDedKeyCombo, F16CNavKeyCombo, F16CRwrKeyCombo,
+                     C130JSeatToggleKeyCombo
                  })
         {
             combo.ItemsSource = McduKeyNames;
@@ -40,6 +41,7 @@ public partial class OptionsPanel : UserControl
             (new[] { "F/A-18C" }, FA18CSection, FA18CBadge),
             (new[] { "F-14B", "F-14B(U)" }, F14Section, F14Badge),
             (new[] { "F-16C" }, F16CSection, F16CBadge),
+            (new[] { "C-130J" }, C130JSection, C130JBadge),
         };
 
         DataContextChanged += OnDataContextChanged;
@@ -135,5 +137,9 @@ public partial class OptionsPanel : UserControl
         ShowDedKeyLabel.Text = Strings.Get("ShowDedKeyLabel");
         ShowNavKeyLabel.Text = Strings.Get("ShowNavKeyLabel");
         ShowRwrKeyLabel.Text = Strings.Get("ShowRwrKeyLabel");
+
+        DisabledWhileInUseC130JBadge.Text = Strings.Get("DisabledWhileInUseC130JBadge");
+        CniSeatHeader.Text = Strings.Get("CniSeatHeader");
+        SeatToggleKeyLabel.Text = Strings.Get("SeatToggleKeyLabel");
     }
 }

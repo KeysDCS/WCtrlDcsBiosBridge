@@ -122,7 +122,7 @@ internal static class AircraftRegistry
     public static readonly AircraftDescriptor C130J = new(
         51, "C-130J", "C-130J.json", "Resources/c130j-font-21x31.json", true,
         new[] { "C-130J" },
-        c => new C130J_Listener(c.Options, c.IsPilot));
+        c => new C130J_Listener(c.Options, c.IsPilot, c.SwitchWithSeat));
 
     /// <summary>
     /// Registry order is menu order. It is also match order for

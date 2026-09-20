@@ -218,5 +218,28 @@
             </StackPanel>
         </ContentControl>
 
+        <ContentControl x:Name="C130JSection" HorizontalContentAlignment="Stretch" IsTabStop="False">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="C-130J" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
+                    <Border x:Name="C130JBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                            VerticalAlignment="Center" Visibility="Collapsed"
+                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="DisabledWhileInUseC130JBadge" x:Uid="DisabledWhileInUseC130JBadge" Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock x:Name="CniSeatHeader" x:Uid="CniSeatHeader" Text="CNI-MU seat turning (single CDU)"
+                           Foreground="{StaticResource SubtleTextForeground}"
+                           FontSize="11" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock x:Name="SeatToggleKeyLabel" x:Uid="SeatToggleKeyLabel" Text="Seat Turn Key:" VerticalAlignment="Center" Width="120"/>
+                    <ComboBox x:Name="C130JSeatToggleKeyCombo"
+                              SelectedValue="{Binding C130J.SeatToggleKey, Mode=TwoWay}"
+                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                </StackPanel>
+            </StackPanel>
+        </ContentControl>
+
     </StackPanel>
 </UserControl>

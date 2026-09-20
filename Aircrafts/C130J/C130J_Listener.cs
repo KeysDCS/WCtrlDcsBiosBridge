@@ -1,4 +1,5 @@
 using WCtrlDcsBiosBridge.Services;
+using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 
@@ -10,11 +11,15 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// wctrl-export.lua UDP feed, which scrapes the pilot's and the copilot's CNI, and the CNI is
 /// the only page this listener offers.
 ///
-/// One listener drives one CDU and answers to one seat, named at construction and fixed for the
-/// life of the listener: the copilot's CNI reaches a panel only when a second CDU has been given
-/// that seat. The aircraft cannot say where the crew is sitting — pilot and copilot share a
-/// single camera point in the module's Views-30.lua and no cockpit state moves between them —
-/// so a lone CDU stays on the pilot's rather than guessing.
+/// Which seat reaches this panel is <see cref="CniSeatPages"/>'s to say: one seat when the
+/// selection screen gave it one, every seat when this is the only CDU, turned through with
+/// <see cref="Config.C130JOptions.SeatToggleKey"/> — SP by default, the one key a CNI page
+/// never needs.
+///
+/// Every seat is drawn whether or not anyone is looking at it, so the page behind the one on
+/// screen is current the moment it is turned to. It costs nothing worth counting — the feed
+/// sends one seat per packet either way — and the alternative is a panel that stays on the old
+/// seat's picture until that seat next has news, which the export throttles to a 2 s heartbeat.
 ///
 /// The indication carries element names and values and nothing else — no position, no font
 /// size, no highlight. The layout comes from <c>Resources/c130j-cni-pages.json</c>, extracted
@@ -26,42 +31,31 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// works it out from the page title and the EXEC keypresses instead, and holds it — the marker
 /// is only on the modified page, so a lamp recomputed from whatever page is on screen would go
 /// out the moment the crew turned away.
-/// That lamp is the aircraft's rather than the seat's, so it is fed both seats' packets while
-/// the screen is fed only this one's.
+/// That lamp is the aircraft's rather than a seat's, so it is fed every packet the feed
+/// carries, whichever seat is on screen.
 /// </summary>
 internal sealed class C130J_Listener : AircraftListener
 {
     private const string SchemaFile = "Resources/c130j-cni-pages.json";
 
+    /// <summary>
+    /// The copilot's screen. The pilot's keeps DEFAULT_PAGE, so a panel that was given a seat
+    /// rather than the toggle renders exactly what it rendered before this page existed.
+    /// </summary>
+    private const string COPILOT_PAGE = "COPILOT";
+
     private readonly CniSchema? _schema;
     private readonly CniPageResolver? _resolver;
 
-    /// <summary>
-    /// The seat this CDU shows, as wctrl-export.lua names it. A page carries no marking of its
-    /// own, so this is the only thing keeping the other seat's off the panel.
-    /// </summary>
-    private readonly string _seat;
+    private readonly CniSeatPages _seats;
+    private readonly Key _seatToggleKey;
 
     private SimExportReceiver? _exportReceiver;
 
     /// <summary>
-    /// Last page identified, so an unrecognised packet does not blank a screen that was
-    /// showing something valid a moment ago.
-    /// </summary>
-    private CniPage? _page;
-
-    /// <summary>
-    /// Which element of a field is the highlighted one, wherever that has been established —
-    /// from the pages themselves, from the radios, or from the crew's own switching. Kept for
-    /// the life of this listener. The GUIDs it is keyed on are regenerated every session, so it
-    /// starts empty and is worth nothing to anyone else, this aircraft's other seat included.
-    /// </summary>
-    private readonly CniSessionMap _session = new();
-
-    /// <summary>
     /// The EXEC annunciator, which the aircraft holds once for all of its CNIs: a change entered
     /// at either station lights both, and executing it at either puts both out. One instance per
-    /// listener all the same, because it is fed every packet the feed carries rather than this
+    /// listener all the same, because it is fed every packet the feed carries rather than one
     /// seat's alone — two lamps reading the same evidence stay in step, and neither owns state
     /// the other has to be told about.
     /// </summary>
@@ -81,10 +75,16 @@ internal sealed class C130J_Listener : AircraftListener
     /// </summary>
     protected override string? DisplayGreenRgb => "05FF3F";
 
-    public C130J_Listener(UserOptions options, bool pilot = true)
+    public C130J_Listener(UserOptions options, bool pilot = true, bool switchWithSeat = false)
         : base(AircraftRegistry.C130J, options)
     {
-        _seat = pilot ? "pilot" : "copilot";
+        _seats = switchWithSeat
+            ? CniSeatPages.ForEverySeat((CniSeatPages.Pilot, DEFAULT_PAGE),
+                                        (CniSeatPages.Copilot, COPILOT_PAGE))
+            : CniSeatPages.ForOneSeat(pilot, DEFAULT_PAGE);
+
+        _seatToggleKey = Enum.TryParse<Key>(options.C130J.SeatToggleKey, out var toggleKey)
+            ? toggleKey : Key.Space;
 
         try
         {
@@ -109,10 +109,43 @@ internal sealed class C130J_Listener : AircraftListener
         }
     }
 
-    protected override void RegisterCduControls() => RenderPlaceholder();
+    protected override void RegisterCduControls()
+    {
+        // Built here rather than in the constructor because a page takes the panel's grid at
+        // the moment it is made, and the panel is not known until it has been attached. The
+        // CNI wants 25 columns where a page built too early would hold the default 24.
+        foreach (var seat in _seats.Views)
+            AddNewPage(seat.PageName);
+
+        if (_seats.CanTurn && CduDevice != null)
+        {
+            CduDevice.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown += HandleKeyDown;
+        }
+
+        RenderPlaceholder();
+    }
 
     // The gear lights and the master caution are declared in LedDefaults, which registers them.
     protected override void RegisterFrontpanelControls() { }
+
+    /// <summary>
+    /// Turns the panel to the next seat. Nothing is redrawn here: every page is kept current as
+    /// its packets arrive, and the display tick renders whichever one is named.
+    ///
+    /// The turn is counted rather than told. DCS holds its own idea of this key — it is the
+    /// natural one to also carry a modifier moving the keyboard's own output to the other CNI —
+    /// and neither side can see the other's. They agree as long as both see every press; one
+    /// that either missed leaves the keyboard on one seat and the screen on another, which is
+    /// visible, and which further presses walk back into step.
+    /// </summary>
+    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != _seatToggleKey) return;
+
+        _currentPage = _seats.Next(_currentPage);
+        App.Logger.Debug($"CNI seat shown: {_currentPage}");
+    }
 
     // Runs on the UDP receiver thread, like the A-10C live export path.
     private void OnLiveExportData(SimExportData data)
@@ -125,7 +158,7 @@ internal sealed class C130J_Listener : AircraftListener
         // RDY stands in on the MCDU, which has no EXEC. A panel ignores the one it does not
         // carry, so each lights a single lamp.
         //
-        // Ahead of the seat filter, and deliberately: the lamp belongs to the aircraft and not
+        // Ahead of the seat lookup, and deliberately: the lamp belongs to the aircraft and not
         // to a station. A change entered on either CNI lights both annunciators, and executing
         // it from either puts both out — which is what the aircraft does, checked on a pair of
         // CDUs seated pilot and copilot. Filtering first left each panel lit by its own seat
@@ -137,10 +170,10 @@ internal sealed class C130J_Listener : AircraftListener
         var exec = _execLamp.Update(cni.Title, cni.ExecPresses);
         SetCduLeds(rdy: exec, exec: exec);
 
-        // The screen, unlike the lamp, is one seat's. Both arrive on the same feed, one page per
-        // packet, and anything but this CDU's own belongs to another panel.
+        // The screen, unlike the lamp, is a seat's. Every seat arrives on the same feed, one
+        // page per packet, and a seat this panel does not hold belongs to another one.
         if (_resolver is null) return;
-        if (!string.Equals(cni.Seat, _seat, StringComparison.OrdinalIgnoreCase)) return;
+        if (!_seats.TryGet(cni.Seat, out var seat)) return;
 
         var page = _resolver.Resolve(cni);
         if (page is null)
@@ -149,15 +182,15 @@ internal sealed class C130J_Listener : AircraftListener
             return;
         }
 
-        if (!ReferenceEquals(page, _page))
+        if (!ReferenceEquals(page, seat.Page))
         {
-            _page = page;
-            App.Logger.Debug($"CNI page ({_seat}): {page.Name} ('{cni.Title}')");
+            seat.Page = page;
+            App.Logger.Debug($"CNI page ({seat.Name}): {page.Name} ('{cni.Title}')");
         }
 
-        var runs = CniGrid.Render(cni, page, _session);
+        var runs = CniGrid.Render(cni, page, seat.Session);
 
-        var c = GetCompositor(DEFAULT_PAGE);
+        var c = GetCompositor(seat.PageName);
         c.Clear();
 
         // Off by default, the compositor renders lowercase as small uppercase. The CNI draws
@@ -179,24 +212,33 @@ internal sealed class C130J_Listener : AircraftListener
 
     private void RenderPlaceholder()
     {
-        var c = GetCompositor(DEFAULT_PAGE);
-        c.Clear();
+        // Every page this panel holds, not just the one on screen: a page turned to before its
+        // seat has sent anything would otherwise be blank rather than saying why.
+        foreach (var seat in _seats.Views)
+        {
+            var c = GetCompositor(seat.PageName);
+            c.Clear();
 
-        // Write() establishes column 0 before Centered so it knows the line width.
-        if (_schema is null)
-        {
-            c.Line(4).Small().White().Write("").Centered("CNI SCHEMA MISSING");
-            c.Line(5).Small().White().Write("").Centered("REINSTALL THE BRIDGE");
-        }
-        else if (_exportReceiver is null)
-        {
-            c.Line(4).Small().White().Write("").Centered("LIVE EXPORT DISABLED");
-            c.Line(5).Small().White().Write("").Centered("ENABLE IT IN OPTIONS");
-        }
-        else
-        {
-            c.Line(4).Small().White().Write("").Centered("WAITING FOR CNI DATA");
-            c.Line(5).Small().White().Write("").Centered("CHECK wctrl-export.lua");
+            // Write() establishes column 0 before Centered so it knows the line width.
+            if (_schema is null)
+            {
+                c.Line(4).Small().White().Write("").Centered("CNI SCHEMA MISSING");
+                c.Line(5).Small().White().Write("").Centered("REINSTALL THE BRIDGE");
+            }
+            else if (_exportReceiver is null)
+            {
+                c.Line(4).Small().White().Write("").Centered("LIVE EXPORT DISABLED");
+                c.Line(5).Small().White().Write("").Centered("ENABLE IT IN OPTIONS");
+            }
+            else
+            {
+                c.Line(4).Small().White().Write("").Centered("WAITING FOR CNI DATA");
+                c.Line(5).Small().White().Write("").Centered("CHECK wctrl-export.lua");
+            }
+
+            // Which seat this page is, so the turn is legible before any data has arrived.
+            if (_seats.CanTurn)
+                c.Line(7).Small().White().Write("").Centered(seat.Name.ToUpperInvariant());
         }
     }
 
@@ -204,6 +246,9 @@ internal sealed class C130J_Listener : AircraftListener
     {
         if (disposing)
         {
+            if (CduDevice != null)
+                CduDevice.KeyDown -= HandleKeyDown;
+
             // The receiver is shared across every listener that wants the feed (other CDUs
             // on the same or a different aircraft may still be reading it), so unsubscribe
             // rather than tearing the socket down.
