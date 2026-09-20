@@ -7,6 +7,12 @@ on:
       - 'docs/**'
     branches:
       - '**' # Triggers on push to any branch
+  # A pull request from a fork pushes to that fork, so the push trigger above fires
+  # there and not here, leaving the PR itself with no build to show.
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
 
 permissions:
   contents: read
